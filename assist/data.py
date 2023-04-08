@@ -166,6 +166,7 @@ def get_ecb_data(keys_list, time_series='yields', actual=True):
             ecb_df = pd.read_csv(io.StringIO(response.text))
             # Create a new DataFrame called 'ir_ts'; isolating Time Period and Observation Value only.
             ecb_ts = ecb_df.filter(['TIME_PERIOD', 'OBS_VALUE'], axis=1)
+            logger.info(f'Columns of retrieved ECB time series dataframe: {ecb_ts.columns}.\n Shape of dataframe: {ecb_ts.shape}.')
             #--------------------------------------------------------------
 
             if time_series=='yields':
@@ -186,9 +187,9 @@ def get_ecb_data(keys_list, time_series='yields', actual=True):
             # 'TIME_PERIOD' was of type 'object' (as can be seen in yc_df.info). Convert it to datetime first
             ecb_ts['TIME_PERIOD'] = pd.to_datetime(ecb_ts['TIME_PERIOD'])
             # Set 'TIME_PERIOD' to be the index
-            ecb_ts = ecb_ts.set_index('TIME_PERIOD')
+            ecb = ecb_ts.set_index('TIME_PERIOD')
             # Append individual dataframe to pd_list
-            pd_list.append(ecb_ts)
+            pd_list.append(ecb)
             #===============================================================
         
         # Now concatenate each individual yield curve dataframe from the list of dataframes,
@@ -237,15 +238,16 @@ def get_other_data(keys_list, country_list=["DE", "FR", "I8"]):
         ecb_df = pd.read_csv(io.StringIO(response.text))
         # Create a new DataFrame called 'ir_ts'; isolating Time Period and Observation Value only.
         ecb_ts = ecb_df.filter(['TIME_PERIOD', 'OBS_VALUE'], axis=1)
+        logger.info(f'Columns of retrieved ECB time series dataframe: {ecb_ts.columns}.\n Shape of dataframe: {ecb_ts.shape}.')
         ecb_ts.rename(columns={'OBS_VALUE': z}, inplace=True)
         #--------------------------------------------------------------
         
         # 'TIME_PERIOD' was of type 'object' (as can be seen in yc_df.info). Convert it to datetime first
         ecb_ts['TIME_PERIOD'] = pd.to_datetime(ecb_ts['TIME_PERIOD'])
         # Set 'TIME_PERIOD' to be the index
-        ecb_ts = ecb_ts.set_index('TIME_PERIOD')
+        ecb = ecb_ts.set_index('TIME_PERIOD')
         # Append individual dataframe to pd_list
-        pd_list.append(ecb_ts)
+        pd_list.append(ecb)
         #===============================================================
         
         # Now concatenate each individual yield curve dataframe from the list of dataframes,

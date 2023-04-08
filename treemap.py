@@ -61,18 +61,19 @@ def make_treemap():
     df.reset_index()
     #print(df)
     CHART_THEME='plotly_white'
+    # Check Plotly for treemap: https://plotly.com/python/treemaps/
     # group data into sectors at the highest level, breaks it down into industry, and then ticker, specified in the 'path' parameter
     # the 'values' parameter uses the value of the column to determine the relative size of each box in the chart
     # the color of the chart follows the percentage change
     # when the mouse is hovered over each box in the chart all info will all be shown
     # the color is red (#ff0000) for negative changes, black (#000000) for 0 changes and green (#00FF00) for positive changes
     fig = px.treemap(df, path=[px.Constant("PERFORMANCE OVERVIEW (pct. change)"), 'Sector', 'Industry', 'company_name'], values='mktCap',
-                    color='pctchange', hover_data=['company_name', 'Price', 'pctchange'],
+                    color='pctchange', hover_data=['company_name'],
                     color_continuous_scale=['#FF0000', "#FEFEFE", '#00FF00'],
                     color_continuous_midpoint=0)
 
-    fig.data[0].customdata = df[['company_name', 'Price', 'pctchange']].round(2) # round to 3 decimal places
-    fig.data[0].texttemplate = "%{label}<br>%{customdata[2]}"
+    #fig.data[0].customdata = df[['company_name', 'Price', 'pctchange']].round(2) # round to 3 decimal places
+    #fig.data[0].texttemplate = "%{label}<br>%{customdata[2]}"
     fig.layout.template=CHART_THEME
     fig.layout.height=500
     fig.update_traces(textposition="middle center")

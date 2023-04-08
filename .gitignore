@@ -1,8 +1,8 @@
-config/
+config/api.py
 etc/
 include/
 lib/
 log/
-assets/
+#assets/
 __pycache__/
 #recording_econDashboard.mov

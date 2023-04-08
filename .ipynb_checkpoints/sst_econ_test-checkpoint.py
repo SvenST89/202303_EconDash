@@ -278,38 +278,20 @@ inf_fig.update_layout(
 #--- Government Debt
 govdebt_list=pd.read_excel('data/keys.xlsx', sheet_name='govdebt')['keys'].tolist()
 govdebt_df=get_other_data(govdebt_list, country_list=["DE", "FR", "I8"]) # format start string %Y-%m-%d
-logger.info(f'Shape of govdebt df: {govdebt_df.shape}')
 #print(govdebt_df)
 #--- Corporate Debt
 corp_list=pd.read_excel('data/keys.xlsx', sheet_name='corpdebt')['keys'].tolist()
 corp_df=get_other_data(corp_list, country_list=["DE", "FR", "I8"]) # format start string %Y-%m-%d
-logger.info(f'Shape of corpdebt df: {corp_df.shape}')
 #print(corp_df)
 #--- Household Debt
 house_list=pd.read_excel('data/keys.xlsx', sheet_name='housedebt')['keys'].tolist()
 house_df=get_other_data(house_list, country_list=["DE", "FR", "I8"]) # format start string %Y-%m-%d
-logger.info(f'Shape of housedebt df: {house_df.shape}')
 #print(house_df)
 #--- TOTAL DEBT DF
-diff_shape=corp_df.shape[0]-govdebt_df.shape[0]
-logger.info(f'The difference in length of corp_df and govdebt_df is: {diff_shape}')
-diff_shape2=house_df.shape[0]-govdebt_df.shape[0]
-logger.info(f'The difference in length of house_df and govdebt_df is: {diff_shape2}')
-if diff_shape==1:
-    corp_df=corp_df.iloc[:-1,:]
-    logger.info(f'New shape of corp_df: {corp_df.shape}. Now, I will merge the fitted corp-df with govdebt_df...')
-    debt_df=govdebt_df + corp_df.values
-else:
-    debt_df=govdebt_df + corp_df.values
-
-if diff_shape2==1:
-    house_df=house_df.iloc[:-1,:]
-    logger.info(f'New shape of corp_df: {house_df.shape}. Now, I will merge the fitted house-df with govdebt_df...')
-    debt_df=debt_df + house_df.values
-else:
-    debt_df=debt_df + house_df.values
-
+debt_df=govdebt_df + corp_df.values
+debt_df=debt_df + house_df.values
 debt_df=debt_df.round(1)
+print(debt_df.head())
 
 debt_fig = go.Figure(data=[
     go.Bar(x=debt_df.index, y=debt_df["I8"], hovertemplate="Country: Euro Area<br>Date: %{x}<br>Value: %{y}", name='Euro Area'),
@@ -364,53 +346,8 @@ debt_fig.update_layout(
     # autosize=True
 )
 
-#===============================#
-# Credit Default Swap Spreads
-#===============================#
-url='https://www.derivateverband.de/DEU/Transparenz/Credit-Default-Swaps'
-html=requests.get(url).content
-df_list=pd.read_html(html)
-cds_df=df_list[0]
-cds_df['Credit Default Swaps']=cds_df['Credit Default Swaps'].replace({'---': 0})
-cds_df['Credit Default Swaps']=cds_df['Credit Default Swaps'].astype('int')
-cds_df['Credit Default Swaps']=cds_df['Credit Default Swaps']/100
-cds_df=cds_df.rename(columns={'Credit Default Swaps': 'CDS_Price'})
 
-headerColor='grey'
-rowEvenColor='lightgrey'
-rowOddColor='white'
-even_odd_list=[rowEvenColor, rowOddColor]*42
-# 42 is length of table elements
 
-cds_tbl=go.Figure(data=[
-    go.Table(
-        header=dict(
-            values=list(cds_df.columns),
-            line_color='darkslategray',
-            fill_color=headerColor,
-            align=['left', 'center'],
-            font=dict(color='white', size=12)
-        ),
-        cells=dict(
-            values=[cds_df.Unternehmen, cds_df.CDS_Price],
-            line_color='darkslategray',
-            fill_color=[even_odd_list*2],
-            align=['left', 'center'],
-            font=dict(color='darkslategray', size=11)
-        )
-    )
-])
-
-cds_tbl.layout.template=CHART_THEME
-cds_tbl.layout.height=300
-cds_tbl.update_layout(
-    margin=dict(
-        b=50,
-        l=25,
-        r=25,
-        t=50
-    )
-)
 #===============================#
 # APP LAYOUT
 #===============================#
@@ -441,7 +378,7 @@ app.layout = dbc.Container(
         dbc.Row([
             # column 1
             dbc.Col([html.H2('ECONOMIC ASSISTANT DASHBOARD', style={'margin-top': '12px', 'margin-left': '48px', 'margin-bottom': '16px'}, className='text-center text-primary, mb-3')], width={'size': 10, 'offset': 0, 'order': 0}), # the max size of a screen is width=12!
-            dbc.Col([html.Img(src="assets/ds_logo_white2.png", style={'height': '50%', 'width':'30%', 'margin-top':'12px', 'margin-left':'16px'})], width={'size': 2, 'offset': 0, 'order': 0})
+            dbc.Col([html.Img(src="assets/ds.png", style={'height': '50%', 'width':'50%', 'margin-top':'12px', 'margin-left':'16px'})], width={'size': 2, 'offset': 0, 'order': 0})
         ], justify='start'),
         # row 2
         dbc.Row([
@@ -492,15 +429,7 @@ app.layout = dbc.Container(
                     id='debtchart',
                     figure=debt_fig,
                     style={'height': 380, 'margin-bottom':'14px', 'margin-left':'12px'}),
-            ], width={'size': 6, 'offset': 0, 'order': 0}),
-            # column 2
-            dbc.Col([
-                html.H5('Daily Credit Default Swap Prices (Premium in EUR)', className='text-center'),
-                dcc.Graph(
-                    id='cdstable',
-                    figure=cds_tbl,
-                    style={'height': 380, 'margin-bottom':'14px', 'margin-left': '12px'}),
-            ], width={'size': 6, 'offset': 0, 'order': 0}),
+            ], width={'size': 12, 'offset': 0, 'order': 0}),
         ]),
     ], fluid=True
 )
@@ -510,9 +439,7 @@ app.layout = dbc.Container(
 #plotly.offline.plot(app, filename="econ_test_app.html")
 
 if __name__=="__main__":
-    # check this link for running dash app also within Jupyterlab: https://stackoverflow.com/questions/45490002/how-to-use-dash-within-jupyter-notebook-or-jupyterlab#:~:text=Following%20these%20steps%20will%20unleash%20Plotly%20Dash%20directly,on%20a%20pandas%20dataframe%20that%20expands%20every%20second.
-    app.run_server(port=6035, dev_tools_ui=True, dev_tools_hot_reload=True, threaded=True)
-    # mode='jupyterlab': use mode='external' for sending the app to your localhost in your browser; or 'inline' for having it in your notebook.
+    app.run_server(debug=True, port=5035)
 
 
 # @app.callback(
